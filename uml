@@ -1,0 +1,205 @@
+@startuml
+set namespaceSeparator ::
+
+class "insta_metrics::repositories::InstagramRepository.dart::InstagramResponse" {
+  +Map<String, dynamic> jsonData
+  +List<Post> posts
+}
+
+class "insta_metrics::repositories::InstagramRepository.dart::InstagramRepository" {
+  +dynamic searchPosts()
+}
+
+"insta_metrics::contracts::InstagramInterface.dart::InstagramInterface" <|-- "insta_metrics::repositories::InstagramRepository.dart::InstagramRepository"
+
+class "insta_metrics::main.dart::InstaMetrics" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "insta_metrics::main.dart::InstaMetrics"
+
+class "insta_metrics::screens::home::post_details_screen.dart::PostDetails" {
+  {static} +dynamic id
+  +_PostDetailsState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "insta_metrics::screens::home::post_details_screen.dart::PostDetails"
+
+class "insta_metrics::screens::home::post_details_screen.dart::_PostDetailsState" {
+  +ScrollController controller
+  +void initState()
+  +void dispose()
+  +dynamic formatNumber()
+  +Widget build()
+}
+
+"insta_metrics::screens::home::post_details_screen.dart::_PostDetailsState" o-- "flutter::src::widgets::scroll_controller.dart::ScrollController"
+"flutter::src::widgets::framework.dart::State<T>" <|-- "insta_metrics::screens::home::post_details_screen.dart::_PostDetailsState"
+
+class "insta_metrics::screens::home::home_screen.dart::_SliverAppBarDelegate" {
+  -Widget _card
+  -double _height
+  +double minExtent
+  +double maxExtent
+  +Widget build()
+  +bool shouldRebuild()
+}
+
+"insta_metrics::screens::home::home_screen.dart::_SliverAppBarDelegate" o-- "flutter::src::widgets::framework.dart::Widget"
+"flutter::src::widgets::sliver_persistent_header.dart::SliverPersistentHeaderDelegate" <|-- "insta_metrics::screens::home::home_screen.dart::_SliverAppBarDelegate"
+
+class "insta_metrics::screens::home::home_screen.dart::HomeScreen" {
+  {static} +dynamic id
+  +RangeValues filterLikes
+  +RangeValues filterComments
+  -bool _likesFilter
+  -bool _commentsFilter
+  -bool _dateFilter
+  -double _height
+  +ScrollController controller
+  +Widget build()
+  +Card buildProfileInfoCard()
+  +Card buildMetricsCard()
+  +dynamic formatNumber()
+  +GestureDetector buildPostCard()
+  +Stack buildProfileCard()
+}
+
+"insta_metrics::screens::home::home_screen.dart::HomeScreen" o-- "flutter::src::material::slider_theme.dart::RangeValues"
+"insta_metrics::screens::home::home_screen.dart::HomeScreen" o-- "flutter::src::widgets::scroll_controller.dart::ScrollController"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "insta_metrics::screens::home::home_screen.dart::HomeScreen"
+
+class "insta_metrics::screens::home::filters_screen.dart::FilterScreen" {
+  {static} +dynamic id
+  +RangeValues filterLikes
+  +RangeValues filterComments
+  -bool _likesFilter
+  -bool _commentsFilter
+  -bool _dateFilter
+  +ScrollController controller
+  +Widget build()
+  +dynamic formatNumber()
+  +GestureDetector buildPostCard()
+}
+
+"insta_metrics::screens::home::filters_screen.dart::FilterScreen" o-- "flutter::src::material::slider_theme.dart::RangeValues"
+"insta_metrics::screens::home::filters_screen.dart::FilterScreen" o-- "flutter::src::widgets::scroll_controller.dart::ScrollController"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "insta_metrics::screens::home::filters_screen.dart::FilterScreen"
+
+class "insta_metrics::screens::wellcome_screen.dart::WelcomeScreen" {
+  {static} +dynamic id
+  +_WelcomeScreenState createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "insta_metrics::screens::wellcome_screen.dart::WelcomeScreen"
+
+class "insta_metrics::screens::wellcome_screen.dart::_WelcomeScreenState" {
+  +bool showSpinner
+  +dynamic userName
+  -TextEditingController _inputController
+  +dynamic updateUserName()
+  +Widget build()
+}
+
+"insta_metrics::screens::wellcome_screen.dart::_WelcomeScreenState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::State<T>" <|-- "insta_metrics::screens::wellcome_screen.dart::_WelcomeScreenState"
+
+class "insta_metrics::components::rounded_button.dart::RoundedButton" {
+  +Color colour
+  +dynamic title
+  +Function onPressed
+  +Widget build()
+}
+
+"insta_metrics::components::rounded_button.dart::RoundedButton" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "insta_metrics::components::rounded_button.dart::RoundedButton"
+
+abstract class "insta_metrics::contracts::InstagramInterface.dart::InstagramInterface" {
+  +dynamic searchPosts()
+}
+
+class "insta_metrics::Observer.dart::Observer<T>" {
+  +Stream<T> stream
+  +Function onSuccess
+  +Function onError
+  +Function onWaiting
+  -Function _defaultOnWaiting
+  -Function _defaultOnError
+  +Widget build()
+}
+
+"insta_metrics::Observer.dart::Observer<T>" o-- "dart::async::Stream<T>"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "insta_metrics::Observer.dart::Observer<T>"
+
+class "insta_metrics::models::Post.dart::Post" {
+  +String type
+  +DateTime post_date
+  +String media_url
+  +String media_preview
+  +String caption
+  +int likes
+  +int comments
+  +bool is_video
+  +String toString()
+}
+
+class "insta_metrics::models::InstagramViewModel.dart::InstagramViewModel" {
+  +InstagramRepository repo
+  +dynamic userName
+  +dynamic fullName
+  +dynamic bio
+  +dynamic external_url
+  +dynamic profile_url
+  +int followers
+  +int following
+  +List<Post> posts
+  +int total_posts
+  +int likes_total
+  +int comments_total
+  +dynamic searchPosts()
+  -dynamic _setupUserData()
+  +dynamic getUserPosts()
+  +dynamic filterPosts()
+}
+
+"insta_metrics::models::InstagramViewModel.dart::InstagramViewModel" o-- "insta_metrics::repositories::InstagramRepository.dart::InstagramRepository"
+"flutter::src::foundation::change_notifier.dart::ChangeNotifier" <|-- "insta_metrics::models::InstagramViewModel.dart::InstagramViewModel"
+"insta_metrics::models::providers::Filters.dart::Filters" <|-- "insta_metrics::models::InstagramViewModel.dart::InstagramViewModel"
+"insta_metrics::contracts::InstagramInterface.dart::InstagramInterface" <|-- "insta_metrics::models::InstagramViewModel.dart::InstagramViewModel"
+
+class "insta_metrics::models::providers::Filters.dart::Filters" {
+  +DateFilter filterByDate
+  +NumberFilter filterByLikes
+  +NumberFilter filterByComments
+  +List<String> filterByHashTags
+  +String order
+  +int orderBy
+  +bool dateFilter
+  +bool likesFilter
+  +bool commentsFilter
+  +List getPosts()
+  +List getPostsWithHashTag()
+  +List getPostsFilterByDate()
+  +List getPostsFilterByLikes()
+  +List getPostsFilterByComments()
+  +List getPostsOrderByDate()
+  +List getPostsOrderByLikes()
+  +List getPostsOrderByComments()
+}
+
+"insta_metrics::models::providers::Filters.dart::Filters" o-- "insta_metrics::models::filters::DateFilter.dart::DateFilter"
+"insta_metrics::models::providers::Filters.dart::Filters" o-- "insta_metrics::models::filters::NumberFilter.dart::NumberFilter"
+
+class "insta_metrics::models::filters::NumberFilter.dart::NumberFilter" {
+  +int maxValue
+  +int minValue
+  +String toString()
+}
+
+class "insta_metrics::models::filters::DateFilter.dart::DateFilter" {
+  +DateTime startDate
+  +DateTime endDate
+}
+
+
+@enduml
