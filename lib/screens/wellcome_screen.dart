@@ -1,10 +1,7 @@
 
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:insta_metrics/models/Instagram.dart';
+import 'package:insta_metrics/models/InstagramViewModel.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:http/http.dart' as http;
 import 'package:insta_metrics/components/rounded_button.dart';
 import 'package:provider/provider.dart';
 import 'home/home_screen.dart';
@@ -27,6 +24,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final instagram = Provider.of<InstagramViewModel>(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: ModalProgressHUD(
@@ -77,78 +75,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     setState(() {
                       showSpinner = true;
                     });
-                    try {
-                      var user_name = _inputController.text;
-                      final response = await http.get("https://www.instagram.com/$user_name/?__a=1");
-
-                      if(response.statusCode == 200) {
-                        String nextPage;
-                        List<Post> posts = [];
-
-                        var jsonData = json.decode(response.body);
-                        jsonData = jsonData['graphql']['user'];
-                        print(jsonData);
-
-                        if (jsonData['edge_owner_to_timeline_media']['page_info']['has_next_page'] == true) {
-                          nextPage = jsonData['edge_owner_to_timeline_media']['page_info']['end_cursor'];
-                        } else {
-                          for (var post in jsonData['edge_owner_to_timeline_media']['edges']) {
-                            posts.add(Post.fromJson(post['node']));
-                          }
-                          Instagram insta = Instagram.fromJson(jsonData,posts);
-                          Navigator.pushNamed(
-                              context,
-                              HomeScreen.id,
-                              arguments: insta
-                          );
-                          setState(() {
-                            showSpinner = false;
-                          });
-                        }
-                        print(nextPage);
-                        http.Response responsePosts;
-
-                        while(nextPage != null) {
-                          responsePosts = await http.get(
-                              "https://www.instagram.com/graphql/query/?query_id=17888483320059182&id="+jsonData['id']+"&first=50&after=" +
-                                  nextPage
-                          );
-
-                          var jsonPostData = json.decode(responsePosts.body);
-
-                          if (jsonPostData['status'] == "ok") {
-                            jsonPostData = jsonPostData['data']['user']['edge_owner_to_timeline_media'];
-
-                            if (jsonPostData['page_info']['has_next_page'] ==
-                                true) {
-                              nextPage = jsonPostData['page_info']['end_cursor'];
-                            } else {
-                              nextPage = null;
-                            }
-
-                            for (var post in jsonPostData['edges']) {
-                              posts.add(Post.fromJson(post['node']));
-                            }
-                          }
-                          }
-
-                          Instagram insta = Instagram.fromJson(jsonData,posts);
-                          Navigator.pushNamed(
-                              context,
-                              HomeScreen.id,
-                              arguments: insta
-                          );
-                        setState(() {
-                          showSpinner = false;
-                        });
+                      var response = await instagram.searchPosts(_inputController.text);
+                      if(response == true) {
+                        Navigator.pushNamed(
+                          context,
+                          HomeScreen.id,
+                        );
                       }
-                    } catch (e) {
-
-                      print(e);
                       setState(() {
                         showSpinner = false;
                       });
-                    }
                   },
                 ),
               ],

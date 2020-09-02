@@ -2,18 +2,14 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:insta_metrics/models/Instagram.dart';
-import 'package:insta_metrics/screens/home/home_screen.dart';
+import 'package:insta_metrics/models/InstagramViewModel.dart';
+import 'package:insta_metrics/models/Post.dart';
+import 'package:insta_metrics/models/filters/DateFilter.dart';
+import 'package:insta_metrics/models/filters/NumberFilter.dart';
 import 'package:insta_metrics/screens/home/post_details_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class FilterModel{
-  final FiltersController filter;
-  final Instagram user;
-
-  FilterModel({this.filter,this.user});
-}
 
 class FilterScreen extends StatelessWidget {
   static const String id = 'filter_screen';
@@ -26,8 +22,7 @@ class FilterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    FilterModel values = ModalRoute.of(context).settings.arguments;
-    List<Post> posts = values.filter.getPosts(values.user.posts);
+    final instagram = Provider.of<InstagramViewModel>(context);
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -39,7 +34,7 @@ class FilterScreen extends StatelessWidget {
                 iconTheme: IconThemeData(color: Colors.grey[500]),
                 elevation: 0,
                 title: Text(
-                  values.filter.filterByLikes.toString(),
+                  instagram.filterByLikes.toString(),
                   style: TextStyle(color: Colors.grey[500]),
                 ),
                 backgroundColor: Colors.white,
@@ -53,14 +48,14 @@ class FilterScreen extends StatelessWidget {
                           builder: (BuildContext context){
                             if(filterLikes == null){
                               filterLikes = RangeValues(
-                                  values.filter.filterByLikes.minValue.toDouble(),
-                                  values.filter.filterByLikes.maxValue.toDouble()
+                                  instagram.filterByLikes.minValue.toDouble(),
+                                  instagram.filterByLikes.maxValue.toDouble()
                               );
                             }
                             if(filterComments == null){
                               filterComments = RangeValues(
-                                  values.filter.filterByComments.minValue.toDouble(),
-                                  values.filter.filterByComments.maxValue.toDouble()
+                                  instagram.filterByComments.minValue.toDouble(),
+                                  instagram.filterByComments.maxValue.toDouble()
                               );
                             }
                             return StatefulBuilder(
@@ -86,8 +81,8 @@ class FilterScreen extends StatelessWidget {
                                           Text(filterLikes.start.toInt().toString()),
                                           RangeSlider(
                                               values: filterLikes,
-                                              min : Options().getPostsOrderByLikes(values.user.posts).first.likes.toDouble(),
-                                              max : Options().getPostsOrderByLikes(values.user.posts).last.likes.toDouble(),
+                                              min : instagram.getPostsOrderByLikes(instagram.posts).first.likes.toDouble(),
+                                              max : instagram.getPostsOrderByLikes(instagram.posts).last.likes.toDouble(),
                                               onChanged: (value){
                                                 setState(() {
                                                   _likesFilter = true;
@@ -110,33 +105,25 @@ class FilterScreen extends StatelessWidget {
                                       FlatButton(onPressed: (){
                                         setState(() {
                                         });
-                                        Navigator.of(context).popUntil((route) => route.settings.name == HomeScreen.id);
-                                        Navigator.pushNamed(
-                                            context,
-                                            FilterScreen.id,
-                                            arguments: FilterModel(
-                                                filter: FiltersController(
-                                                    likesFilter: _likesFilter,
-                                                    commentsFilter: _commentsFilter,
-                                                    dateFilter:  _dateFilter,
-                                                    filterByComments: NumberFilter(
-                                                        maxValue: Options().getPostsOrderByComments(values.user.posts).first.comments,
-                                                        minValue:  Options().getPostsOrderByComments(values.user.posts).last.comments
-                                                    ),
-                                                    filterByLikes: NumberFilter(
-                                                        minValue: filterLikes.start.toInt(),
-                                                        maxValue: filterLikes.end.toInt()
-                                                    ),
-                                                    filterByDate: DateFilter(
-                                                        startDate: Options().getPostsOrderByDate(values.user.posts).first.post_date,
-                                                        endDate: Options().getPostsOrderByDate(values.user.posts).last.post_date
-                                                    ),
-                                                    filterByHashTags: [],
-                                                    order: 'asc',
-                                                    orderBy: 2
-                                                ),
-                                                user: values.user
-                                            )
+                                        instagram.filterPosts(
+                                            DateFilter(
+                                                startDate: instagram.getPostsOrderByDate(instagram.posts).first.post_date,
+                                                endDate: instagram.getPostsOrderByDate(instagram.posts).last.post_date
+                                            ),
+                                            NumberFilter(
+                                                maxValue: instagram.getPostsOrderByComments(instagram.posts).first.comments,
+                                                minValue:  instagram.getPostsOrderByComments(instagram.posts).last.comments
+                                            ),
+                                            NumberFilter(
+                                                minValue: filterLikes.start.toInt(),
+                                                maxValue: filterLikes.end.toInt()
+                                            ),
+                                            [],
+                                            'asc',
+                                            2,
+                                            _likesFilter,
+                                            _commentsFilter,
+                                            _dateFilter,
                                         );
                                       },
                                           child: Text('Ok')
@@ -163,12 +150,12 @@ class FilterScreen extends StatelessWidget {
                       (context, index) {
                     return Container(
                       child: buildPostCard(
-                          context, posts.elementAt(index), values.user,
+                          context, instagram.posts.elementAt(index), instagram,
                           index),
                       margin: EdgeInsets.symmetric(horizontal: 40, vertical: 3),
                     );
                   },
-                  childCount: posts.length,
+                  childCount: instagram.posts.length,
                 ),
               )
             ],
@@ -179,7 +166,7 @@ class FilterScreen extends StatelessWidget {
   String formatNumber(number){
     return NumberFormat.compact().format(number).toString();
   }
-  GestureDetector buildPostCard(context,Post post, Instagram user,index) {
+  GestureDetector buildPostCard(context,Post post, InstagramViewModel user,index) {
     String formatDate(int date) =>
         date < 10 ? '0' + date.toString() : date.toString();
     String postDate(Post post) =>

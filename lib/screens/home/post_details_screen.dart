@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
-import 'package:insta_metrics/models/Instagram.dart';
+import 'package:insta_metrics/models/Post.dart';
 import 'package:intl/intl.dart';
 
 class PostDetails extends StatefulWidget {

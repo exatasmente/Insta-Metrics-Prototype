@@ -4,7 +4,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
-import 'package:insta_metrics/models/Instagram.dart';
+import 'package:insta_metrics/models/InstagramViewModel.dart';
+import 'package:insta_metrics/models/Post.dart';
 import 'package:insta_metrics/screens/home/filters_screen.dart';
 import 'package:insta_metrics/screens/home/post_details_screen.dart';
 import 'package:intl/intl.dart';
@@ -46,7 +47,7 @@ class HomeScreen extends StatelessWidget {
   ScrollController controller = ScrollController();
   @override
   Widget build(BuildContext context) {
-    Instagram user  = ModalRoute.of(context).settings.arguments;
+    final instagram = Provider.of<InstagramViewModel>(context);
 
     return Scaffold(
         body: Container(
@@ -78,24 +79,24 @@ class HomeScreen extends StatelessWidget {
                     Card(
                         margin: EdgeInsets.all(0),
                         elevation: 0,
-                        child: buildProfileCard(context, user)),
+                        child: buildProfileCard(context, instagram)),
                     400),
                 pinned: false,
               ),
               SliverPersistentHeader(
-                delegate: _SliverAppBarDelegate(buildMetricsCard(context,user),60),
+                delegate: _SliverAppBarDelegate(buildMetricsCard(context,instagram),60),
                 pinned: true,
               ),
                SliverList(
                 delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        user.posts.sort( (a,b) => a.post_date.isBefore(b.post_date) == true ? 1 : -1 );
+                        instagram.getUserPosts().sort( (a,b) => a.post_date.isBefore(b.post_date) == true ? 1 : -1 );
                     return Container(
-                      child: buildPostCard(context,user.posts.elementAt(index), user,index),
+                      child: buildPostCard(context,instagram.getUserPosts().elementAt(index), instagram,index),
                       margin: EdgeInsets.symmetric(horizontal: 40, vertical: 3),
                     );
                   },
-                  childCount: user.posts.length,
+                  childCount: instagram.getUserPosts().length,
                 ),
               )
 
@@ -105,7 +106,7 @@ class HomeScreen extends StatelessWidget {
         );
   }
 
-  Card buildProfileInfoCard(Instagram user) {
+  Card buildProfileInfoCard(InstagramViewModel user) {
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(10)),
@@ -210,7 +211,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Card buildMetricsCard(context,Instagram user) {
+  Card buildMetricsCard(context,InstagramViewModel user) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 0),
       elevation: 0,
@@ -249,14 +250,14 @@ class HomeScreen extends StatelessWidget {
                         builder: (BuildContext context){
                         if(filterLikes == null){
                           filterLikes = RangeValues(
-                            Options().getPostsOrderByLikes(user.posts).first.likes.toDouble(),
-                            Options().getPostsOrderByLikes(user.posts).last.likes.toDouble()
+                            user.getPostsOrderByLikes(user.posts).first.likes.toDouble(),
+                            user.getPostsOrderByLikes(user.posts).last.likes.toDouble()
                           );
                         }
                         if(filterComments == null){
                           filterComments = RangeValues(
-                              Options().getPostsOrderByComments(user.posts).first.comments.toDouble(),
-                              Options().getPostsOrderByComments(user.posts).last.comments.toDouble()
+                              user.getPostsOrderByComments(user.posts).first.comments.toDouble(),
+                              user.getPostsOrderByComments(user.posts).last.comments.toDouble()
                           );
                         }
                               return StatefulBuilder(
@@ -281,10 +282,10 @@ class HomeScreen extends StatelessWidget {
                                       children: <Widget>[
                                         Text(this.formatNumber(filterLikes.start.toInt())),
                                         RangeSlider(
-                                            divisions: Options().getPostsOrderByComments(user.posts).last.likes,
+                                            divisions: user.getPostsOrderByComments(user.posts).last.likes,
                                             values: filterLikes,
-                                            min : Options().getPostsOrderByLikes(user.posts).first.likes.toDouble(),
-                                            max : Options().getPostsOrderByLikes(user.posts).last.likes.toDouble(),
+                                            min : user.getPostsOrderByLikes(user.posts).first.likes.toDouble(),
+                                            max : user.getPostsOrderByLikes(user.posts).last.likes.toDouble(),
                                             onChanged: (value){
                                               setState(() {
                                                 _likesFilter = true;
@@ -301,10 +302,10 @@ class HomeScreen extends StatelessWidget {
                                       children: <Widget>[
                                         Text(this.formatNumber(filterComments.start.toInt())),
                                         RangeSlider(
-                                          divisions: Options().getPostsOrderByComments(user.posts).last.comments,
+                                          divisions: user.getPostsOrderByComments(user.posts).last.comments,
                                             values: filterComments,
-                                            min : Options().getPostsOrderByComments(user.posts).first.comments.toDouble(),
-                                            max : Options().getPostsOrderByComments(user.posts).last.comments.toDouble(),
+                                            min : user.getPostsOrderByComments(user.posts).first.comments.toDouble(),
+                                            max : user.getPostsOrderByComments(user.posts).last.comments.toDouble(),
                                             onChanged: (value){
                                               setState(() {
                                                 _commentsFilter = true;
@@ -330,29 +331,6 @@ class HomeScreen extends StatelessWidget {
                                       Navigator.pushNamed(
                                         context,
                                         FilterScreen.id,
-                                        arguments: FilterModel(
-                                          filter: FiltersController(
-                                            likesFilter: _likesFilter,
-                                            commentsFilter: _commentsFilter,
-                                            dateFilter:  _dateFilter,
-                                            filterByComments: NumberFilter(
-                                              minValue: filterComments.start.toInt(),
-                                              maxValue: filterComments.end.toInt()
-                                            ),
-                                            filterByLikes: NumberFilter(
-                                              minValue: filterLikes.start.toInt(),
-                                              maxValue: filterLikes.end.toInt()
-                                            ),
-                                            filterByDate: DateFilter(
-                                              startDate: Options().getPostsOrderByDate(user.posts).first.post_date,
-                                              endDate: Options().getPostsOrderByDate(user.posts).last.post_date
-                                            ),
-                                             filterByHashTags: [],
-                                            order: 'asc',
-                                            orderBy: 2
-                                          ),
-                                          user: user
-                                        )
                                       );
                                     },
                                       child: Text('Ok')
@@ -373,7 +351,7 @@ class HomeScreen extends StatelessWidget {
   String formatNumber(number){
     return NumberFormat.compact().format(number).toString();
   }
-  GestureDetector buildPostCard(context,Post post, Instagram user,index) {
+  GestureDetector buildPostCard(context,Post post, InstagramViewModel user,index) {
     String formatDate(int date) =>
         date < 10 ? '0' + date.toString() : date.toString();
     String postDate(Post post) =>
@@ -520,7 +498,7 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-  Stack buildProfileCard(BuildContext context, Instagram user) {
+  Stack buildProfileCard(BuildContext context, InstagramViewModel user) {
     return Stack(
       children: <Widget>[
         Positioned(
